@@ -51,7 +51,7 @@ function install_starship_linux {
         echo "starship is already installed"
         return
     fi
-
+    curl -sS https://starship.rs/install.sh | sh
 }
 
 # get dependencies
