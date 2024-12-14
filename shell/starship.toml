@@ -1,0 +1,44 @@
+format="""$hostname $directory$git_branch$git_commit$git_status$git_stash$time
+$character
+"""
+
+[character]
+success_symbol = "[⟢ ](bold white)"
+error_symbol = "[⟢ ](bold red)"
+
+[username]
+style_user = "white bold"
+style_root = "red bold"
+format = "[$user]($style)"
+disabled = false
+show_always = true
+
+[hostname]
+ssh_only = false
+ssh_symbol = " 🌐 "
+format = "[$ssh_symbol](bold yellow)[$hostname](bold white)"
+disabled = false
+
+[directory]
+style = "bold blue"
+
+[git_commit]
+tag_symbol = " tag "
+
+[git_status]
+ahead = ">"
+behind = "<"
+diverged = "<>"
+renamed = "r"
+deleted = "x"
+
+[git_branch]
+format="$symbol(white)[$branch]($style) "
+style = "bold blue"
+symbol = "⎇ "
+
+[time]
+disabled = false
+time_format = "%R" # Hour:Minute Format
+style = "bg:#1d2230"
+format = '[[$time](fg:#a0a9cb)]($style)'

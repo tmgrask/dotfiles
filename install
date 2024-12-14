@@ -1,0 +1,106 @@
+#!/bin/bash -e 
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+DEPENDENCIES=(
+  "tmux" 
+  "fzf" 
+  "ripgrep" 
+  "pass"
+  "jq"
+  "npm"
+  "zsh"
+  "curl"
+)
+
+function create_symlink {
+    if [ -L ${2} ]; then
+        rm ${2}
+    fi
+    echo "Creating symlink ${2} -> ${1}"
+    ln -s ${1} ${2}
+}
+
+function backup_existing {
+    if ([ -f ${1} ] || [ -d ${1} ]) && [ ! -L ${1} ]; then
+        echo "Backing up existing ${1} to ${1}.bak"
+        mv ${1} ${1}.bak
+    fi
+}
+
+function install_neovim_linux {
+    if [ "$(which nvim)" = "/usr/local/bin/nvim" ]
+    then
+        echo "neovim is already installed"
+        return
+    fi
+    # build from latest stable on linux
+    # assumes the dotfiles repo is at ~/checkout/dotfiles
+    sudo apt-get install ninja-build gettext cmake unzip curl build-essential
+    cd ~/checkout
+    git clone https://github.com/neovim/neovim
+    cd neovim && git checkout stable && make CMAKE_BUILD_TYPE=RelWithDebInfo 
+    sudo make install
+    sudo npm install -g tree-sitter-cli
+    cd ~/checkout/dotfiles
+}
+
+function install_starship_linux {
+    if [ "$(which starship)" = "/usr/local/bin/starship" ]
+    then
+        echo "starship is already installed"
+        return
+    fi
+
+}
+
+# get dependencies
+host_os=$(uname -s)
+if [ "${host_os}" = "Darwin" ]; then
+    echo "Installing dependencies with homebrew"
+    brew install --quiet ${DEPENDENCIES[@]}
+    # nvim installed from brew on macos
+    brew install neovim starship
+elif [ "${host_os}" = "Linux" ]; then
+    echo "Installing dependencies with apt-get"
+    sudo apt-get update -y
+    sudo apt-get install -y ${DEPENDENCIES[@]}
+    # nvim pulled from releases on linux
+    install_neovim_linux
+    install_starship_linux
+    chsh -s $(which zsh)
+else 
+  echo "Unsupported OS: ${host_os}"
+  exit 1
+fi
+
+mkdir -p ~/.local/bin/
+mkdir -p ~/.tmux
+mkdir -p ~/.config
+
+# backup any files that will be replaced by a symlink
+backup_existing ~/.tmux.conf
+backup_existing ~/.zshrc
+backup_existing ~/.local/bin/tmux-sessionizer
+backup_existing ~/.config/starship.toml
+backup_existing ~/.config/nvim
+backup_existing ~/.tmux/new-session.sh
+
+# create symlinks to the version controlled files
+create_symlink ${SCRIPT_DIR}/shell/zshrc ~/.zshrc
+create_symlink ${SCRIPT_DIR}/shell/starship.toml ~/.config/starship.toml
+create_symlink ${SCRIPT_DIR}/tmux/tmux-sessionizer ~/.local/bin/tmux-sessionizer
+create_symlink ${SCRIPT_DIR}/tmux/tmux.conf ~/.tmux.conf
+create_symlink ${SCRIPT_DIR}/tmux/new-session.sh ~/.tmux/new-session.sh
+create_symlink ${SCRIPT_DIR}/nvim ~/.config/nvim
+for f in $(ls ${SCRIPT_DIR}/shell/elk); do
+    create_symlink ${SCRIPT_DIR}/shell/elk/${f} ~/.local/bin/${f}
+done
+
+# setup tmux package manager
+if [ ! -d ~/.tmux/plugins/tpm ]; then
+    echo "Installing tmux package manager"
+    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+fi
+
+echo "Installation Done, run control + A + I in tmux to install plugins"

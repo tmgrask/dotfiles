@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+auth="$(pass elasticsearch/username):$(pass elasticsearch/password)"
+fqdn="$(pass elasticsearch/fqdn)"
+
+if [[ -z ${2} ]]; then
+    curl -XPUT -s -k -u "${auth}" "${fqdn}/${1}"
+else
+    curl -XPUT -s -k -u "${auth}" \
+         -H "Content-Type: application/json" \
+         "${fqdn}/${1}" \
+         -d "${2}"
+fi

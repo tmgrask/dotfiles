@@ -1,0 +1,6 @@
+#!/bin/bash -e
+
+auth="$(pass elasticsearch/username):$(pass elasticsearch/password)"
+fqdn="$(pass elasticsearch/fqdn)"
+
+curl -XDELETE -s -k -u "${auth}" "${fqdn}/${1}"

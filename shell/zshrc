@@ -1,0 +1,39 @@
+if [[ $(uname) == "Darwin" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    eval "$(fzf --zsh)"
+fi
+
+eval "$(starship init zsh)"
+
+
+# android development setup
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+
+# add local bin to path
+export PATH="$PATH:$HOME/.local/bin"
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+export PATH="$PATH:$HOME/go/bin"
+
+# key binds
+bindkey -r '^T'
+bindkey '^F' fzf-file-widget
+bindkey -s '^T' 'tmux-sessionizer^M'
+
+# aliases
+alias nebula-up="sudo nebula -config /opt/homebrew/etc/nebula/config.yml"
+alias ls="ls -G --color=auto"
+alias vim="nvim"
+alias so="source ~/.zshrc"
+
+# private settings, put whatever secret sauce in ~/.zshrc_private/
+if [ -d ~/.zshrc_private ]; then
+  for f in ~/.zshrc_private/*; do
+    source "${f}"
+  done
+fi
+
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh" || true
