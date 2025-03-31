@@ -11,6 +11,7 @@ DEPENDENCIES=(
   "npm"
   "zsh"
   "curl"
+  "nvm"
 )
 
 function create_symlink {
