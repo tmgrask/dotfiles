@@ -12,6 +12,8 @@ DEPENDENCIES=(
   "zsh"
   "curl"
   "nvm"
+  "socat"
+  "netcat"
 )
 
 function create_symlink {

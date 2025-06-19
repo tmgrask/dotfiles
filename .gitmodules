@@ -1,0 +1,3 @@
+[submodule "nvim/kotlin-lsp"]
+	path = nvim/kotlin-lsp
+	url = git@github.com:Kotlin/kotlin-lsp.git

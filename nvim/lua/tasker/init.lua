@@ -208,6 +208,15 @@ require('lazy').setup({
         ---@module 'render-markdown'
         ---@type render.md.UserConfig
         opts = {},
+    },
+    {
+        'nvim-flutter/flutter-tools.nvim',
+        lazy = false,
+        dependencies = {
+            'nvim-lua/plenary.nvim',
+            'stevearc/dressing.nvim', -- optional for vim.ui.select
+        },
+        config = true,
     }
 })
 
@@ -239,10 +248,9 @@ require('mason-lspconfig').setup({
     },
 })
 
-local lspconfig = require("lspconfig")
+vim.cmd([[filetype plugin indent on]])
 
-lspconfig.sourcekit.setup {
-}
+local lspconfig = require('lspconfig')
 
 lsp.on_attach(function(client, bufnr)
     -- see :help lsp-zero-keybindings
@@ -278,14 +286,22 @@ lsp.on_attach(function(client, bufnr)
     end
 end)
 
--- enable gofumpt for gopls
---lspconfig.gopls.setup {
---    settings = {
---        gopls = {
---            gofumpt = true
---        }
---    }
---}
+lspconfig.kotlin_language_server.setup {
+    cmd                 = { 'kotlin-ls', '--stdio' },
+    filetypes           = { 'kotlin' },
+    single_file_support = true,
+    root_dir            = lspconfig.util.root_pattern(
+        'build.gradle',
+        'settings.gradle',
+        'settings.gradle.kts',
+        '.git'
+    ),
+    on_attach           = function(client, bufnr)
+        require('lsp-zero').default_keymaps({ buffer = bufnr })
+    end,
+}
+
+require("flutter-tools").setup {} -- use defaults
 
 -- only show diagnostics after hover for some time
 vim.cmd('autocmd CursorHold * lua vim.diagnostic.open_float()')
