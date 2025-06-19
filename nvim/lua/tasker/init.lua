@@ -140,22 +140,6 @@ require('lazy').setup({
             vim.keymap.set('n', '<C-s>', builtin.live_grep, {})
         end
     },
-    -- harpoon
-    {
-        "theprimeagen/harpoon",
-        dependencies = { "nvim-lua/plenary.nvim" },
-        config = function()
-            local mark = require("harpoon.mark")
-            local ui = require("harpoon.ui")
-
-            vim.keymap.set("n", "<leader>a", mark.add_file)
-            vim.keymap.set("n", "<C-e>", ui.toggle_quick_menu)
-
-            vim.keymap.set("n", "<C-j>", function() ui.nav_file(1) end)
-            vim.keymap.set("n", "<C-k>", function() ui.nav_file(2) end)
-            vim.keymap.set("n", "<C-l>", function() ui.nav_file(3) end)
-        end
-    },
     -- trouble
     {
         "folke/trouble.nvim",
@@ -206,9 +190,18 @@ require('lazy').setup({
         -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.icons' }, -- if you use standalone mini plugins
         -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
         ---@module 'render-markdown'
-        ---@type render.md.UserConfig
         opts = {},
-    }
+    },
+    {
+      "supermaven-inc/supermaven-nvim",
+      config = function()
+        require("supermaven-nvim").setup({
+            keymaps = {
+                accept_suggestion = "<S-Tab>",
+            }
+        })
+      end,
+    },
 })
 
 -- colorscheme
@@ -222,7 +215,6 @@ cmp.setup({
         ['<C-p>'] = cmp.mapping.select_prev_item(cmp_select),
         ['<C-n>'] = cmp.mapping.select_next_item(cmp_select),
         ['<C-y>'] = cmp.mapping.confirm({ select = true }),
-        ['<Tab>'] = cmp.mapping.complete()
     })
 })
 vim.diagnostic.config({
