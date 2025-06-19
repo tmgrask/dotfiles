@@ -193,15 +193,24 @@ require('lazy').setup({
         opts = {},
     },
     {
-      "supermaven-inc/supermaven-nvim",
-      config = function()
-        require("supermaven-nvim").setup({
-            keymaps = {
-                accept_suggestion = "<S-Tab>",
-            }
-        })
-      end,
+        "supermaven-inc/supermaven-nvim",
+        config = function()
+            require("supermaven-nvim").setup({
+                keymaps = {
+                    accept_suggestion = "<S-Tab>",
+                }
+            })
+        end,
     },
+    {
+        'nvim-flutter/flutter-tools.nvim',
+        lazy = false,
+        dependencies = {
+            'nvim-lua/plenary.nvim',
+            'stevearc/dressing.nvim', -- optional for vim.ui.select
+        },
+        config = true,
+    }
 })
 
 -- colorscheme
