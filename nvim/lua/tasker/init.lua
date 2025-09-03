@@ -1,5 +1,4 @@
-require("tasker.set")
--- install plugins and manage all keymaps in this one file
+require("tasker.set") -- install plugins
 
 -- setup lazy vim
 local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
@@ -49,46 +48,6 @@ require('lazy').setup({
             { 'L3MON4D3/LuaSnip' }
         },
     },
-    -- nvim-tree
-    {
-        "nvim-tree/nvim-tree.lua",
-        dependencies = {
-            "nvim-tree/nvim-web-devicons"
-        },
-        config = function()
-            -- disable netrw at the very start of your init.lua
-            vim.g.loaded_netrw = 1
-            vim.g.loaded_netrwPlugin = 1
-            -- optionally enable 24-bit colour
-            vim.opt.termguicolors = true
-            require("nvim-tree").setup({
-                sort = {
-                    sorter = "case_sensitive",
-                },
-                view = {
-                    width = 50,
-                },
-                renderer = {
-                    group_empty = true,
-                },
-                filters = {
-                    dotfiles = true,
-                },
-                diagnostics = {
-                    enable = true,
-                    show_on_dirs = true,
-                    show_on_open_dirs = true,
-                    icons = {
-                        hint = "",
-                        info = "",
-                        warning = "",
-                        error = ""
-                    }
-                }
-            })
-        end
-    },
-    -- workplace diagnostics to make nvim-tree more useful
     {
         "artemave/workspace-diagnostics.nvim"
     },
@@ -98,24 +57,13 @@ require('lazy').setup({
         build = ":TSUpdate",
         config = function()
             require 'nvim-treesitter.configs'.setup {
-                -- A list of parser names, or "all"
-                ensure_installed = { "vimdoc", "javascript", "typescript", "c", "lua", "rust", "swift" },
-
-                -- Install parsers synchronously (only applied to `ensure_installed`)
+                ensure_installed = { "vimdoc", "javascript", "typescript", "c", "lua", "rust", "swift", "go", "bash" },
                 sync_install = false,
-
                 -- Automatically install missing parsers when entering buffer
-                -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
                 auto_install = true,
 
                 highlight = {
-                    -- `false` will disable the whole extension
                     enable = true,
-
-                    -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
-                    -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
-                    -- Using this option may slow down your editor, and you may see some duplicate highlights.
-                    -- Instead of true it can also be a list of languages
                     additional_vim_regex_highlighting = false,
                 },
             }
@@ -132,28 +80,14 @@ require('lazy').setup({
     -- telescope
     {
         'nvim-telescope/telescope.nvim',
-        tag = '0.1.5',
         dependencies = { 'nvim-lua/plenary.nvim' },
-        config = function()
-            local builtin = require('telescope.builtin')
-            vim.keymap.set('n', '<C-f>', builtin.find_files, {})
-            vim.keymap.set('n', '<C-s>', builtin.live_grep, {})
-        end
     },
     -- trouble
     {
         "folke/trouble.nvim",
         dependencies = { "nvim-tree/nvim-web-devicons" },
-        config = function()
-            vim.keymap.set("n", "<leader>xx", function() require("trouble").toggle() end)
-            vim.keymap.set("n", "<leader>xw", function() require("trouble").toggle("workspace_diagnostics") end)
-            vim.keymap.set("n", "<leader>xd", function() require("trouble").toggle("document_diagnostics") end)
-            vim.keymap.set("n", "<leader>xq", function() require("trouble").toggle("quickfix") end)
-            vim.keymap.set("n", "<leader>xl", function() require("trouble").toggle("loclist") end)
-            vim.keymap.set("n", "gR", function() require("trouble").toggle("lsp_references") end)
-        end
     },
-    -- color preview
+    -- color prevew
     {
         "brenoprata10/nvim-highlight-colors",
         config = function()
@@ -163,32 +97,9 @@ require('lazy').setup({
             }
         end
     },
-    -- jenkins
-    {
-        'https://git.sr.ht/~imraniq/jenkinsfile.nvim',
-        dependencies = "nvim-lua/plenary.nvim",
-        config = function()
-            require("jenkinsfile").setup({
-                username = os.getenv("JENKINS_USERNAME") or "notset",
-                password_cmd = { "pass", "jenkins/token" }, -- command to run to get password/token
-                jenkins_host = os.getenv("JENKINS_HOST") or "notset",
-                insecure = true,                            -- sets --insecure on curl, useful if ssl certs are giving issues
-            })
-        end,
-    },
-    -- this is mostly to make tmux-sessionizer work from within vim
-    {
-        "voldikss/vim-floaterm"
-    },
-    {
-        'stevearc/dressing.nvim',
-        opts = {},
-    },
     {
         'MeanderingProgrammer/render-markdown.nvim',
-        dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.nvim' }, -- if you use the mini.nvim suite
-        -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.icons' }, -- if you use standalone mini plugins
-        -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+        dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.nvim' },
         ---@module 'render-markdown'
         opts = {},
     },
@@ -237,17 +148,14 @@ local lspconfig = require('lspconfig')
 lsp.on_attach(function(client, bufnr)
     -- see :help lsp-zero-keybindings
     -- to learn the available actions
-    local opts = { buffer = bufnr, remap = false }
     lsp.default_keymaps({ buffer = bufnr })
-    vim.keymap.set("n", "<leader>d", function() vim.diagnostic.open_float() end, opts)
-    vim.keymap.set("n", "g<CR>", function() vim.lsp.buf.code_action() end, opts)
-    vim.keymap.set("n", "<leader>r", function() vim.lsp.buf.rename() end, opts)
-    vim.keymap.set("n", "<leader>s", function() vim.lsp.buf.workspace_symbol("<cword>") end, opts)
-    vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, opts)
-    vim.keymap.set("n", "gf", function() vim.lsp.buf.format() end, opts)
+    vim.keymap.set("n", "g<CR>", function() vim.lsp.buf.code_action() end, { buffer = bufnr, desc = "vim.lsp.buf.code_action" })
+    vim.keymap.set("n", "<leader>r", function() vim.lsp.buf.rename() end, { buffer = bufnr, desc = "vim.lsp.buf.rename" })
+    vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, { buffer = bufnr, desc = "vim.lsp.buf.hover"} )
+    vim.keymap.set("n", "gf", function() vim.lsp.buf.format() end, { buffer = bufnr, desc = "vim.lsp.buf.format"} )
     -- note that enabling workspace diagnostics can get a little resource intensive in large codebases
     vim.keymap.set("n", "gw",
-        function() require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr) end, opts)
+        function() require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr) end, { buffer = bufnr, desc = "populate_workspace_diagnostics" })
 
     -- stop tsserver in deno projects
     if lspconfig.util.root_pattern("deno.json", "import_map.json")(vim.fn.getcwd()) then
@@ -289,15 +197,8 @@ require("flutter-tools").setup {} -- use defaults
 vim.cmd('autocmd CursorHold * lua vim.diagnostic.open_float()')
 vim.o.updatetime = 400
 
--- Misc keybinds
-
 -- clipboard integration
 vim.api.nvim_set_keymap('v', '<leader>y', '"+y', { noremap = true, silent = true })
-
--- open current shell dir in nimv-tree
-vim.api.nvim_set_keymap('n', '<leader>c', ':vsplit .<CR>', { noremap = true, silent = true })
--- open relative dir in nvim-tree
-vim.api.nvim_set_keymap('n', '<leader>n', ':vsplit %:h<CR>', { noremap = true, silent = true })
 
 -- clear highlights
 vim.keymap.set("n", "<ESC>", ":nohlsearch<CR>", { silent = true })
@@ -308,16 +209,51 @@ vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagn
 vim.keymap.set('n', '<C-j>', ':cnext<CR>', { desc = 'Go to next quickfix item' })
 vim.keymap.set('n', '<C-k>', ':cprev<CR>', { desc = 'Go to previous quickfix item' })
 
-vim.keymap.set('n', '<leader>jv', ':lua require("jenkinsfile").validate()', { desc = 'Validate Jenkinsfile' })
+local function open_floating_terminal(cmd)
+    local width = math.floor(vim.o.columns * 0.8)
+    local height = math.floor(vim.o.lines * 0.7)
+    local buf = vim.api.nvim_create_buf(false, true)
+    local opts = {
+        relative = 'editor',
+        width = width,
+        height = height,
+        col = math.floor((vim.o.columns - width) / 2),
+        row = math.floor(((vim.o.lines - height) / 2) - 1),
+        style = 'minimal',
+        title = "projects",
+        border = 'none',
+        title_pos = 'left',
+    }
+    local win = vim.api.nvim_open_win(buf, true, opts)
+    --vim.api.nvim_win_set_option(win, 'winhl', 'Normal:NormalFloat,FloatBorder:FloatBorder')
 
--- setup for Floaterm
-vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]])
-vim.keymap.set('n', '<C-x>', ":FloatermToggle<CR>", { silent = true })
-vim.keymap.set('t', '<C-x>', "<C-\\><C-n>:FloatermToggle<CR>", { silent = true })
+    -- Start terminal and run command
+    vim.fn.termopen(cmd)
+
+    -- Enter terminal mode
+    vim.cmd('startinsert')
+
+    -- Autoclose on exit
+    vim.api.nvim_create_autocmd('TermClose', {
+        buffer = buf,
+        callback = function()
+            vim.api.nvim_win_close(win, true)
+        end,
+        once = true,
+    })
+end
 
 -- make tmux-sessionizer work from within nvim
-vim.keymap.set('n', '<C-t>',
-    ":FloatermNew --width=1.0 --height=1.0 --title=tmux-sessionizer --disposable --autoclose=1 tmux-sessionizer<CR>")
+vim.keymap.set('n', '<C-t>', function() open_floating_terminal("tmux-sessionizer --no-margin") end, { desc = "tmux-sessionizer" })
 
--- some git basics from within vim
-vim.keymap.set('n', '<leader>gs', ":FloatermNew! --title=git git status<CR>")
+-- telescope
+local telescope = require('telescope.builtin')
+vim.keymap.set('n', '<C-f>', telescope.find_files, { desc = "telescope.find_files" })
+vim.keymap.set('n', '<C-s>', telescope.live_grep, { desc = "telescope.live_grep" })
+vim.keymap.set('n', '<C-h>', telescope.help_tags, { desc = "telescope.help_tags" })
+vim.keymap.set('n', '<C-g>', telescope.git_status, { desc = "telescope.git_status" })
+vim.keymap.set('n', '<C-e>', telescope.lsp_document_symbols, { desc = "telescope.lsp_document_symbols" })
+vim.keymap.set('n', '<C-q>', telescope.diagnostics, { desc = "telescope.diagnostics" })
+vim.keymap.set('n', '<C-m>', telescope.keymaps, { desc = "telescope.keymaps"})
+
+vim.api.nvim_set_hl(0, 'FloatBorder', { fg = '#333333' })

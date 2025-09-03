@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
 
-if [[ $# -eq 1 ]]; then
-  selected=$1
-else
-  selected=$(find ~/checkout ~/checkout/z-tasker ~/checkout/tmgrask ~/.config ~/.local/share/nvim/lazy -mindepth 1 -maxdepth 1 -type d | fzf)
+search_paths=(
+    ~/checkout 
+    ~/checkout/z-tasker 
+    ~/checkout/tmgrask 
+    ~/.config 
+)
+
+fzf_margin="10%"
+if [[ "$1" == "--no-margin" ]]; then
+    fzf_margin="0%"
 fi
+
+selected=$(find "${search_paths[@]}" -mindepth 1 -maxdepth 1 -type d | fzf --margin "${fzf_margin}" --border=rounded --padding=1 --info=hidden)
 
 if [[ -z $selected ]]; then
   exit 0
