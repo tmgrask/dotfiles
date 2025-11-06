@@ -254,6 +254,5 @@ vim.keymap.set('n', '<C-h>', telescope.help_tags, { desc = "telescope.help_tags"
 vim.keymap.set('n', '<C-g>', telescope.git_status, { desc = "telescope.git_status" })
 vim.keymap.set('n', '<C-e>', telescope.lsp_document_symbols, { desc = "telescope.lsp_document_symbols" })
 vim.keymap.set('n', '<C-q>', telescope.diagnostics, { desc = "telescope.diagnostics" })
-vim.keymap.set('n', '<C-m>', telescope.keymaps, { desc = "telescope.keymaps"})
 
 vim.api.nvim_set_hl(0, 'FloatBorder', { fg = '#333333' })
