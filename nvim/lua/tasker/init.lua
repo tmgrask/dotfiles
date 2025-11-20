@@ -191,6 +191,22 @@ lspconfig.kotlin_language_server.setup {
     end,
 }
 
+-- buf LSP for protobuf files (custom server setup)
+local configs = require('lspconfig.configs')
+
+if not configs.buf_ls then
+    configs.buf_ls = {
+        default_config = {
+            cmd = { 'buf', 'lsp', 'serve' },
+            filetypes = { 'proto' },
+            root_dir = lspconfig.util.root_pattern('buf.yaml', 'buf.work.yaml', '.git'),
+            single_file_support = true,
+        },
+    }
+end
+
+lspconfig.buf_ls.setup {}
+
 require("flutter-tools").setup {} -- use defaults
 
 -- only show diagnostics after hover for some time
@@ -208,43 +224,6 @@ vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagn
 
 vim.keymap.set('n', '<C-j>', ':cnext<CR>', { desc = 'Go to next quickfix item' })
 vim.keymap.set('n', '<C-k>', ':cprev<CR>', { desc = 'Go to previous quickfix item' })
-
-local function open_floating_terminal(cmd)
-    local width = math.floor(vim.o.columns * 0.8)
-    local height = math.floor(vim.o.lines * 0.7)
-    local buf = vim.api.nvim_create_buf(false, true)
-    local opts = {
-        relative = 'editor',
-        width = width,
-        height = height,
-        col = math.floor((vim.o.columns - width) / 2),
-        row = math.floor(((vim.o.lines - height) / 2) - 1),
-        style = 'minimal',
-        title = "projects",
-        border = 'none',
-        title_pos = 'left',
-    }
-    local win = vim.api.nvim_open_win(buf, true, opts)
-    --vim.api.nvim_win_set_option(win, 'winhl', 'Normal:NormalFloat,FloatBorder:FloatBorder')
-
-    -- Start terminal and run command
-    vim.fn.termopen(cmd)
-
-    -- Enter terminal mode
-    vim.cmd('startinsert')
-
-    -- Autoclose on exit
-    vim.api.nvim_create_autocmd('TermClose', {
-        buffer = buf,
-        callback = function()
-            vim.api.nvim_win_close(win, true)
-        end,
-        once = true,
-    })
-end
-
--- make tmux-sessionizer work from within nvim
-vim.keymap.set('n', '<C-t>', function() open_floating_terminal("tmux-sessionizer --no-margin") end, { desc = "tmux-sessionizer" })
 
 -- telescope
 local telescope = require('telescope.builtin')

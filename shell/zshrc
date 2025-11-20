@@ -41,3 +41,14 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 export PATH=$HOME/flutter/bin:$PATH
+. "/Users/taskermackersy/.deno/env"
+# opencode
+export PATH=/Users/taskermackersy/.opencode/bin:$PATH
+export PATH="/opt/homebrew/opt/go@1.24/bin:$PATH"
+
+# bun completions
+[ -s "/Users/taskermackersy/.bun/_bun" ] && source "/Users/taskermackersy/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
