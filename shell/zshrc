@@ -53,7 +53,7 @@ function oc {
     # Start the server in a detached window and capture its window id
     local wid
     wid=$(tmux new-window -d -t "$session" -P -F '#{window_id}' \
-      "OPENCODE_SERVER_PASSWORD=${OPENCODE_SERVER_PASSWORD} opencode serve --port ${port}")
+      "OPENCODE_SERVER_PASSWORD=${OPENCODE_SERVER_PASSWORD} opencode serve --port ${port} --print-logs --log-level DEBUG")
     # Wait up to 5s for the server to be ready
     local i=0
     while ! curl -s --connect-timeout 1 -o /dev/null -w "%{http_code}" "${url}/" 2>/dev/null | grep -qv "^000$"; do
