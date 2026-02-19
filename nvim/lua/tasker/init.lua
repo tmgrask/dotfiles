@@ -111,6 +111,9 @@ require('lazy').setup({
             'stevearc/dressing.nvim', -- optional for vim.ui.select
         },
         config = true,
+    },
+    {
+        "towolf/vim-helm"
     }
 })
 
@@ -149,13 +152,15 @@ lsp.on_attach(function(client, bufnr)
     -- see :help lsp-zero-keybindings
     -- to learn the available actions
     lsp.default_keymaps({ buffer = bufnr })
-    vim.keymap.set("n", "g<CR>", function() vim.lsp.buf.code_action() end, { buffer = bufnr, desc = "vim.lsp.buf.code_action" })
+    vim.keymap.set("n", "g<CR>", function() vim.lsp.buf.code_action() end,
+        { buffer = bufnr, desc = "vim.lsp.buf.code_action" })
     vim.keymap.set("n", "<leader>r", function() vim.lsp.buf.rename() end, { buffer = bufnr, desc = "vim.lsp.buf.rename" })
-    vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, { buffer = bufnr, desc = "vim.lsp.buf.hover"} )
-    vim.keymap.set("n", "gf", function() vim.lsp.buf.format() end, { buffer = bufnr, desc = "vim.lsp.buf.format"} )
+    vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, { buffer = bufnr, desc = "vim.lsp.buf.hover" })
+    vim.keymap.set("n", "gf", function() vim.lsp.buf.format() end, { buffer = bufnr, desc = "vim.lsp.buf.format" })
     -- note that enabling workspace diagnostics can get a little resource intensive in large codebases
     vim.keymap.set("n", "gw",
-        function() require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr) end, { buffer = bufnr, desc = "populate_workspace_diagnostics" })
+        function() require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr) end,
+        { buffer = bufnr, desc = "populate_workspace_diagnostics" })
 
     -- stop tsserver in deno projects
     if lspconfig.util.root_pattern("deno.json", "import_map.json")(vim.fn.getcwd()) then
@@ -173,6 +178,15 @@ lsp.on_attach(function(client, bufnr)
                 return
             end
         end
+    end
+
+
+    -- try to make helm manifest templates more usable
+    if vim.bo[bufnr].filetype == "helm" then
+        vim.diagnostic.disable(bufnr)
+        vim.defer_fn(function()
+            vim.diagnostic.reset(nil, bufnr)
+        end, 1000)
     end
 end)
 
