@@ -87,14 +87,12 @@ backup_existing ~/.zshrc
 backup_existing ~/.local/bin/tmux-sessionizer
 backup_existing ~/.config/starship.toml
 backup_existing ~/.config/nvim
-backup_existing ~/.tmux/new-session.sh
 
 # create symlinks to the version controlled files
 create_symlink ${SCRIPT_DIR}/shell/zshrc ~/.zshrc
 create_symlink ${SCRIPT_DIR}/shell/starship.toml ~/.config/starship.toml
 create_symlink ${SCRIPT_DIR}/tmux/tmux-sessionizer ~/.local/bin/tmux-sessionizer
 create_symlink ${SCRIPT_DIR}/tmux/tmux.conf ~/.tmux.conf
-create_symlink ${SCRIPT_DIR}/tmux/new-session.sh ~/.tmux/new-session.sh
 create_symlink ${SCRIPT_DIR}/nvim ~/.config/nvim
 for f in $(ls ${SCRIPT_DIR}/shell/elk); do
     create_symlink ${SCRIPT_DIR}/shell/elk/${f} ~/.local/bin/${f}
