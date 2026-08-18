@@ -80,11 +80,14 @@ fi
 mkdir -p ~/.local/bin/
 mkdir -p ~/.tmux
 mkdir -p ~/.config
+mkdir -p ~/.config/herdr
 
 # backup any files that will be replaced by a symlink
 backup_existing ~/.tmux.conf
 backup_existing ~/.zshrc
 backup_existing ~/.local/bin/tmux-sessionizer
+backup_existing ~/.local/bin/herdr-sessionizer
+backup_existing ~/.config/herdr/config.toml
 backup_existing ~/.config/starship.toml
 backup_existing ~/.config/nvim
 
@@ -93,6 +96,8 @@ create_symlink ${SCRIPT_DIR}/shell/zshrc ~/.zshrc
 create_symlink ${SCRIPT_DIR}/shell/starship.toml ~/.config/starship.toml
 create_symlink ${SCRIPT_DIR}/tmux/tmux-sessionizer ~/.local/bin/tmux-sessionizer
 create_symlink ${SCRIPT_DIR}/tmux/tmux.conf ~/.tmux.conf
+create_symlink ${SCRIPT_DIR}/herdr/herdr-sessionizer ~/.local/bin/herdr-sessionizer
+create_symlink ${SCRIPT_DIR}/herdr/config.toml ~/.config/herdr/config.toml
 create_symlink ${SCRIPT_DIR}/nvim ~/.config/nvim
 for f in $(ls ${SCRIPT_DIR}/shell/elk); do
     create_symlink ${SCRIPT_DIR}/shell/elk/${f} ~/.local/bin/${f}

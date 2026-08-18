@@ -1,0 +1,17 @@
+onboarding = false
+
+[keys]
+prefix = "ctrl+a"
+# pane navigation is already vim-style by default: prefix+h/j/k/l
+
+# Full-screen project sessionizer, same muscle memory as the tmux setup
+[[keys.command]]
+key = "ctrl+t"
+type = "popup"
+command = "herdr-sessionizer"
+description = "project sessionizer"
+width = "100%"
+height = "100%"
+
+[theme]
+name = "catppuccin"
