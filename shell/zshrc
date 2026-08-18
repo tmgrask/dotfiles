@@ -29,50 +29,6 @@ alias ls="ls -G --color=auto"
 alias vim="nvim"
 alias so="source ~/.zshrc"
 
-# opencode: derive a stable port (10000-19999) from a tmux session name
-function oc_port {
-  local session="${1:-$(tmux display-message -p '#{session_name}' 2>/dev/null)}"
-  local cksum_val=$(echo -n "$session" | cksum | awk '{print $1}')
-  echo $(( 10000 + cksum_val % 10000 ))
-}
-
-# opencode: attach to (or start) the dedicated server for the current tmux session
-function oc {
-  if [[ -z $TMUX ]]; then
-    echo "oc: must be run inside a tmux session" >&2
-    return 1
-  fi
-  local session=$(tmux display-message -p '#{session_name}')
-  local port=$(oc_port "$session")
-  local url="http://127.0.0.1:${port}"
-  local srv="oc-server"
-
-  # Check if the server is already listening on the port
-  if ! curl -s --connect-timeout 1 -o /dev/null -w "%{http_code}" "${url}/" 2>/dev/null | grep -qv "^000$"; then
-    echo "oc: starting opencode server for session '${session}' on port ${port}..."
-    # Start the server in a detached window and capture its window id
-    local wid
-    wid=$(tmux new-window -d -t "$session" -P -F '#{window_id}' \
-      "OPENCODE_SERVER_PASSWORD=${OPENCODE_SERVER_PASSWORD} opencode serve --port ${port} --print-logs --log-level DEBUG")
-    # Wait up to 5s for the server to be ready
-    local i=0
-    while ! curl -s --connect-timeout 1 -o /dev/null -w "%{http_code}" "${url}/" 2>/dev/null | grep -qv "^000$"; do
-      sleep 0.3
-      (( i++ ))
-      if (( i > 16 )); then
-        echo "oc: server did not start in time — check the '${srv}' window" >&2
-        return 1
-      fi
-    done
-    # Name the server window now that the process is stable
-    tmux set-option -t "$wid" automatic-rename off
-    tmux rename-window -t "$wid" "$srv"
-  fi
-
-  # Attach the TUI client in the current window
-  opencode attach "$url" "$@"
-}
-
 # private settings, put whatever secret sauce in ~/.zshrc_private/
 if [ -d ~/.zshrc_private ]; then
   for f in ~/.zshrc_private/*; do
@@ -96,3 +52,10 @@ export PATH="/opt/homebrew/opt/go@1.24/bin:$PATH"
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+export PATH=$PATH:$HOME/.maestro/bin
+
+# >>> grok installer >>>
+export PATH="$HOME/.grok/bin:$PATH"
+fpath=(~/.grok/completions/zsh $fpath)
+autoload -Uz compinit && compinit -C
+# <<< grok installer <<<
