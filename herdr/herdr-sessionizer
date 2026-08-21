@@ -1,16 +1,24 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 # fzf over project dirs; create-or-focus a herdr workspace named after the dir.
 # Works from a herdr popup (ctrl+t, see herdr/config.toml) or a plain terminal.
 
-search_paths=(
-    ~/checkout
-    ~/checkout/z-tasker
-    ~/checkout/tmgrask
-    ~/.config
-)
+search_paths=()
+for project_root in \
+    "$HOME/checkout" \
+    "$HOME/checkout/z-tasker" \
+    "$HOME/checkout/tmgrask" \
+    "$HOME/.config"; do
+  [[ -d "$project_root" ]] && search_paths+=("$project_root")
+done
 
-selected=$(find "${search_paths[@]}" -mindepth 1 -maxdepth 1 -type d | fzf --border=rounded --padding=1 --info=hidden)
+if [[ ${#search_paths[@]} -eq 0 ]]; then
+  echo "herdr-sessionizer: no project search directories exist" >&2
+  exit 1
+fi
+
+selected=$(find "${search_paths[@]}" -mindepth 1 -maxdepth 1 -type d | fzf --border=none --padding=1 --info=hidden)
 
 if [[ -z $selected ]]; then
   exit 0
@@ -20,11 +28,11 @@ selected_name=$(basename "$selected" | tr . _)
 
 workspace_id=$(herdr workspace list 2>/dev/null \
   | jq -r --arg n "$selected_name" '.result.workspaces[] | select(.label == $n) | .workspace_id' \
-  | head -n1)
+  | head -n1) || true
 
 if [[ -z $workspace_id ]]; then
   workspace_id=$(herdr workspace create --cwd "$selected" --label "$selected_name" --no-focus 2>/dev/null \
-    | jq -r '.result.workspace.workspace_id')
+    | jq -r '.result.workspace.workspace_id') || true
 fi
 
 if [[ -z $workspace_id || $workspace_id == "null" ]]; then

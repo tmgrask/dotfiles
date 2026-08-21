@@ -10,8 +10,15 @@ key = "ctrl+t"
 type = "popup"
 command = "herdr-sessionizer"
 description = "session"
-width = "100%"
-height = "25%"
+width = "60%"
+height = "50%"
 
 [theme]
 name = "catppuccin"
+
+# Match Pi's basalt-bloom background while retaining Herdr's Catppuccin accents.
+[theme.custom]
+panel_bg = "#06070a"
+
+[ui]
+agent_panel_sort = "spaces"

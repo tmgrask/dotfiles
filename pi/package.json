@@ -1,0 +1,23 @@
+{
+  "name": "tasker-pi-config",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "agent/extensions/*"
+  ],
+  "scripts": {
+    "check": "npm run typecheck --workspace=pi-handoff-extension && npm run typecheck --workspace=pi-save-md-extension && npm run typecheck --workspace=pi-worktrees-extension && npm run typecheck --workspace=pi-skill-toggle",
+    "test": "npm test --workspace=pi-handoff-extension && npm test --workspace=pi-save-md-extension && npm test --workspace=pi-worktrees-extension && npm test --workspace=pi-skill-toggle"
+  },
+  "dependencies": {
+    "@earendil-works/pi-ai": "^0.84.2",
+    "@earendil-works/pi-coding-agent": "^0.84.2",
+    "@earendil-works/pi-tui": "^0.84.2",
+    "typebox": "^1.1.38"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}

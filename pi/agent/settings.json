@@ -1,0 +1,20 @@
+{
+  "theme": "basalt-bloom-tasker",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.6-sol",
+  "defaultThinkingLevel": "medium",
+  "enableSkillCommands": true,
+  "packages": [
+    "npm:pi-extmgr",
+    "npm:@plannotator/pi-extension",
+    "git:github.com/dmmulroy/pi-web-tools",
+    "npm:pi-mcp-adapter",
+    "npm:awesome-pi-themes"
+  ],
+  "editorPaddingX": 1,
+  "terminal": {
+    "showTerminalProgress": false
+  },
+  "showCacheMissNotices": false,
+  "lastChangelogVersion": "0.84.2"
+}

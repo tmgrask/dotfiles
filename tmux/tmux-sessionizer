@@ -1,11 +1,30 @@
 #!/usr/bin/env bash
 
-search_paths=(
-    ~/checkout 
-    ~/checkout/z-tasker 
-    ~/checkout/tmgrask 
-    ~/.config 
-)
+tmux_command=$(command -v tmux)
+tmux_server_pid=$($tmux_command display-message -p '#{pid}' 2>/dev/null || true)
+if [[ -n $tmux_server_pid && $(uname -s) == Darwin ]]; then
+  tmux_server_command=$(lsof -a -p "$tmux_server_pid" -d txt -Fn 2>/dev/null \
+    | sed -n 's/^n//p' \
+    | grep '/tmux$' \
+    | head -n1)
+  if [[ -x $tmux_server_command ]]; then
+    tmux_command=$tmux_server_command
+  fi
+fi
+
+search_paths=()
+for project_root in \
+    "$HOME/checkout" \
+    "$HOME/checkout/z-tasker" \
+    "$HOME/checkout/tmgrask" \
+    "$HOME/.config"; do
+  [[ -d "$project_root" ]] && search_paths+=("$project_root")
+done
+
+if [[ ${#search_paths[@]} -eq 0 ]]; then
+  echo "tmux-sessionizer: no project search directories exist" >&2
+  exit 1
+fi
 
 fzf_margin="10%"
 if [[ "$1" == "--no-margin" ]]; then
@@ -19,20 +38,19 @@ if [[ -z $selected ]]; then
 fi
 
 selected_name=$(basename "$selected" | tr . _)
-tmux_running=$(pgrep tmux)
+tmux_running=$(pgrep -x tmux || true)
 
-if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
-  tmux new-session -s $selected_name -c $selected
+if [[ -z ${TMUX:-} ]] && [[ -z $tmux_running ]]; then
+  "$tmux_command" new-session -s "$selected_name" -c "$selected"
   exit 0
 fi
 
-if ! tmux has-session -t=$selected_name 2> /dev/null; then
-  tmux new-session -ds $selected_name -c $selected
+if ! "$tmux_command" has-session -t=$selected_name 2> /dev/null; then
+  "$tmux_command" new-session -ds "$selected_name" -c "$selected"
 fi
 
-if [[ -z $TMUX ]]; then
-  tmux attach -t $selected_name
+if [[ -z ${TMUX:-} ]]; then
+  "$tmux_command" attach -t "$selected_name"
 else
-  tmux switch-client -t $selected_name
+  "$tmux_command" switch-client -t "$selected_name"
 fi
-

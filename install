@@ -1,112 +1,369 @@
-#!/bin/bash -e 
+#!/usr/bin/env bash
+set -euo pipefail
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+export PATH="${HOME}/.local/bin:${PATH}"
 
-DEPENDENCIES=(
-  "tmux" 
-  "fzf" 
-  "ripgrep" 
-  "pass"
-  "jq"
-  "npm"
-  "zsh"
-  "curl"
-  "nvm"
-  "socat"
-  "netcat"
+readonly PI_EXTENSIONS=(
+    continue-after-compaction.ts
+    git-interceptor.ts
+    herdr-agent-state.ts
+    handoff
+    pi-cloak
+    pi-skill-toggle
+    pi-worktrees
+    save-md
+    user-message-divider
 )
 
-function create_symlink {
-    if [ -L ${2} ]; then
-        rm ${2}
+create_symlink() {
+    local source_path=$1
+    local target_path=$2
+
+    if [[ -L "${target_path}" ]]; then
+        rm "${target_path}"
+    else
+        backup_existing "${target_path}"
     fi
-    echo "Creating symlink ${2} -> ${1}"
-    ln -s ${1} ${2}
+    printf 'Creating symlink %s -> %s\n' "${target_path}" "${source_path}"
+    ln -s "${source_path}" "${target_path}"
 }
 
-function backup_existing {
-    if ([ -f ${1} ] || [ -d ${1} ]) && [ ! -L ${1} ]; then
-        echo "Backing up existing ${1} to ${1}.bak"
-        mv ${1} ${1}.bak
+backup_existing() {
+    local target_path=$1
+    local backup_path
+
+    if [[ -e "${target_path}" && ! -L "${target_path}" ]]; then
+        backup_path="${target_path}.bak"
+        if [[ -e "${backup_path}" ]]; then
+            backup_path="${backup_path}.$(date +%Y%m%d%H%M%S)"
+        fi
+        printf 'Backing up %s to %s\n' "${target_path}" "${backup_path}"
+        mv "${target_path}" "${backup_path}"
     fi
 }
 
-function install_neovim_linux {
-    if [ "$(which nvim)" = "/usr/local/bin/nvim" ]
-    then
-        echo "neovim is already installed"
+detect_dotfiles_profile() {
+    if [[ -n "${DOTFILES_PROFILE:-}" ]]; then
+        printf '%s\n' "${DOTFILES_PROFILE}"
         return
     fi
-    # build from latest stable on linux
-    # assumes the dotfiles repo is at ~/checkout/dotfiles
-    sudo apt-get install ninja-build gettext cmake unzip curl build-essential
-    cd ~/checkout
-    git clone https://github.com/neovim/neovim
-    cd neovim && git checkout stable && make CMAKE_BUILD_TYPE=RelWithDebInfo 
-    sudo make install
-    sudo npm install -g tree-sitter-cli
-    cd ~/checkout/dotfiles
+
+    case "$(uname -s)" in
+        Darwin)
+            printf '%s\n' macos
+            ;;
+        Linux)
+            # shellcheck disable=SC1091 -- /etc/os-release is the standard Linux platform descriptor.
+            source /etc/os-release
+            case "${ID:-}" in
+                arch)
+                    printf '%s\n' arch-desktop
+                    ;;
+                ubuntu | debian)
+                    printf '%s\n' ubuntu-server
+                    ;;
+                *)
+                    printf 'install: unsupported Linux distribution: %s\n' "${ID:-unknown}" >&2
+                    return 1
+                    ;;
+            esac
+            ;;
+        *)
+            printf 'install: unsupported operating system: %s\n' "$(uname -s)" >&2
+            return 1
+            ;;
+    esac
 }
 
-function install_starship_linux {
-    if [ "$(which starship)" = "/usr/local/bin/starship" ]
-    then
-        echo "starship is already installed"
+install_macos_packages() {
+    local packages=(tmux fzf ripgrep pass jq zsh curl socat netcat lsof neovim starship)
+    command -v brew >/dev/null 2>&1 || {
+        printf 'install: Homebrew is required on macOS: https://brew.sh\n' >&2
+        return 1
+    }
+    brew install "${packages[@]}"
+}
+
+install_ubuntu_server_packages() {
+    local packages=(
+        build-essential curl fzf git jq lsof neovim netcat-openbsd
+        pass ripgrep socat tmux zsh
+    )
+    sudo apt-get update
+    sudo apt-get install -y "${packages[@]}"
+
+    if ! command -v starship >/dev/null 2>&1; then
+        curl -fsSL https://starship.rs/install.sh | sh -s -- --yes
+    fi
+}
+
+install_arch_desktop_packages() {
+    local packages=(
+        curl fzf git jq lsof neovim openbsd-netcat pass ripgrep socat
+        starship tmux zsh
+    )
+    sudo pacman -Syu --needed --noconfirm "${packages[@]}"
+}
+
+validate_dotfiles_profile() {
+    case "$1" in
+        macos | ubuntu-server | arch-desktop) ;;
+        *)
+            printf 'install: unsupported DOTFILES_PROFILE: %s\n' "$1" >&2
+            return 1
+            ;;
+    esac
+}
+
+install_platform_packages() {
+    local profile=$1
+
+    if [[ "${DOTFILES_SKIP_PACKAGES:-0}" == 1 ]]; then
+        printf 'Skipping platform packages because DOTFILES_SKIP_PACKAGES=1\n'
         return
     fi
-    curl -sS https://starship.rs/install.sh | sh
+
+    case "${profile}" in
+        macos) install_macos_packages ;;
+        ubuntu-server) install_ubuntu_server_packages ;;
+        arch-desktop) install_arch_desktop_packages ;;
+        *)
+            printf 'install: unsupported DOTFILES_PROFILE: %s\n' "${profile}" >&2
+            return 1
+            ;;
+    esac
 }
 
-# get dependencies
-host_os=$(uname -s)
-if [ "${host_os}" = "Darwin" ]; then
-    echo "Installing dependencies with homebrew"
-    brew install --quiet ${DEPENDENCIES[@]}
-    # nvim installed from brew on macos
-    brew install neovim starship
-elif [ "${host_os}" = "Linux" ]; then
-    echo "Installing dependencies with apt-get"
-    sudo apt-get update -y
-    sudo apt-get install -y ${DEPENDENCIES[@]}
-    # nvim pulled from releases on linux
-    install_neovim_linux
-    install_starship_linux
-    chsh -s $(which zsh)
-else 
-  echo "Unsupported OS: ${host_os}"
-  exit 1
+install_node_runtime() {
+    local node_version
+    local node_major
+    local node_minor
+
+    if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
+        node_version=$(node --version | sed 's/^v//')
+        node_major=${node_version%%.*}
+        node_minor=${node_version#*.}
+        node_minor=${node_minor%%.*}
+        if (( node_major > 22 || (node_major == 22 && node_minor >= 19) )); then
+            printf 'Node.js already satisfies Pi: v%s\n' "${node_version}"
+            return
+        fi
+    fi
+
+    if ! command -v mise >/dev/null 2>&1; then
+        printf 'Installing mise for the pinned Node.js runtime\n'
+        curl -fsSL https://mise.run | sh
+    fi
+
+    export PATH="${HOME}/.local/bin:${HOME}/.local/share/mise/shims:${PATH}"
+    mise use --global node@22
+    hash -r
+
+    node_version=$(node --version | sed 's/^v//')
+    node_major=${node_version%%.*}
+    node_minor=${node_version#*.}
+    node_minor=${node_minor%%.*}
+    if (( node_major < 22 || (node_major == 22 && node_minor < 19) )); then
+        printf 'install: Pi requires Node.js >=22.19, but mise selected v%s\n' "${node_version}" >&2
+        return 1
+    fi
+}
+
+ensure_login_runtime_path() {
+    local profile_file="${HOME}/.profile"
+    local marker='# dotfiles managed runtime path'
+
+    touch "${profile_file}"
+    if ! grep -Fq "${marker}" "${profile_file}"; then
+        cat >>"${profile_file}" <<'EOF'
+
+# dotfiles managed runtime path
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
+EOF
+    fi
+}
+
+install_herdr() {
+    if command -v herdr >/dev/null 2>&1; then
+        printf 'Herdr already installed: %s\n' "$(herdr --version)"
+        return
+    fi
+
+    printf 'Installing Herdr from herdr.dev\n'
+    curl -fsSL https://herdr.dev/install.sh | sh
+    command -v herdr >/dev/null 2>&1 || {
+        printf 'install: Herdr installation completed but herdr is not on PATH\n' >&2
+        return 1
+    }
+}
+
+create_config_directories() {
+    mkdir -p \
+        "${HOME}/.agents/skill-backups" \
+        "${HOME}/.agents/skills" \
+        "${HOME}/.config" \
+        "${HOME}/.config/herdr" \
+        "${HOME}/.local/bin" \
+        "${HOME}/.pi/agent/extensions" \
+        "${HOME}/.pi/agent/themes" \
+        "${HOME}/.plannotator" \
+        "${HOME}/.tmux"
+}
+
+backup_managed_files() {
+    local profile=$1
+    local extension
+    local skill_path
+    local skill
+    local installed_skill
+    local skill_backup
+
+    backup_existing "${HOME}/.tmux.conf"
+    backup_existing "${HOME}/.zshrc"
+    backup_existing "${HOME}/.local/bin/tmux-sessionizer"
+    backup_existing "${HOME}/.local/bin/herdr-sessionizer"
+    backup_existing "${HOME}/.local/bin/clickhouse-mcp-authorization"
+    backup_existing "${HOME}/.config/herdr/config.toml"
+    backup_existing "${HOME}/.config/starship.toml"
+    backup_existing "${HOME}/.config/nvim"
+    backup_existing "${HOME}/.pi/agent/settings.json"
+    backup_existing "${HOME}/.pi/agent/cloak.json"
+    backup_existing "${HOME}/.pi/agent/mcp.json"
+    backup_existing "${HOME}/.pi/agent/themes/catppuccin-macchiato.json"
+    backup_existing "${HOME}/.pi/agent/themes/basalt-bloom-tasker.json"
+    backup_existing "${HOME}/.plannotator/config.json"
+    backup_existing "${HOME}/.local/bin/pi"
+
+    if [[ "${profile}" != ubuntu-server ]]; then
+        mkdir -p "${HOME}/.config/ghostty"
+        backup_existing "${HOME}/.config/ghostty/config"
+    fi
+
+    if [[ "${profile}" == macos ]]; then
+        mkdir -p "${HOME}/Library/LaunchAgents"
+        backup_existing "${HOME}/.local/bin/herdr-mobile-relay-service"
+        backup_existing "${HOME}/.local/bin/herdr-mobile-setup-qr"
+        backup_existing "${HOME}/Library/LaunchAgents/dev.herdr.mobile-relay.plist"
+    fi
+
+    for extension in "${PI_EXTENSIONS[@]}"; do
+        backup_existing "${HOME}/.pi/agent/extensions/${extension}"
+    done
+
+    for skill_path in "${SCRIPT_DIR}"/agents/skills/*; do
+        [[ -e "${skill_path}" ]] || continue
+        skill=$(basename "${skill_path}")
+        installed_skill="${HOME}/.agents/skills/${skill}"
+        skill_backup="${HOME}/.agents/skill-backups/${skill}"
+        if [[ -e "${installed_skill}" && ! -L "${installed_skill}" ]]; then
+            if [[ -e "${skill_backup}" ]]; then
+                skill_backup="${skill_backup}.$(date +%Y%m%d%H%M%S)"
+            fi
+            printf 'Backing up %s to %s\n' "${installed_skill}" "${skill_backup}"
+            mv "${installed_skill}" "${skill_backup}"
+        fi
+    done
+}
+
+link_shared_dotfiles() {
+    local extension
+    local skill_path
+    local skill
+    local elk_command
+
+    create_symlink "${SCRIPT_DIR}/shell/zshrc" "${HOME}/.zshrc"
+    create_symlink "${SCRIPT_DIR}/shell/starship.toml" "${HOME}/.config/starship.toml"
+    create_symlink "${SCRIPT_DIR}/tmux/tmux-sessionizer" "${HOME}/.local/bin/tmux-sessionizer"
+    create_symlink "${SCRIPT_DIR}/tmux/tmux.conf" "${HOME}/.tmux.conf"
+    create_symlink "${SCRIPT_DIR}/herdr/herdr-sessionizer" "${HOME}/.local/bin/herdr-sessionizer"
+    create_symlink "${SCRIPT_DIR}/pi/clickhouse-mcp-authorization" "${HOME}/.local/bin/clickhouse-mcp-authorization"
+    create_symlink "${SCRIPT_DIR}/pi/node_modules/.bin/pi" "${HOME}/.local/bin/pi"
+    create_symlink "${SCRIPT_DIR}/herdr/config.toml" "${HOME}/.config/herdr/config.toml"
+    create_symlink "${SCRIPT_DIR}/nvim" "${HOME}/.config/nvim"
+
+    for elk_command in "${SCRIPT_DIR}"/shell/elk/*; do
+        [[ -f "${elk_command}" ]] || continue
+        create_symlink "${elk_command}" "${HOME}/.local/bin/$(basename "${elk_command}")"
+    done
+
+    create_symlink "${SCRIPT_DIR}/pi/agent/settings.json" "${HOME}/.pi/agent/settings.json"
+    create_symlink "${SCRIPT_DIR}/pi/agent/cloak.json" "${HOME}/.pi/agent/cloak.json"
+    create_symlink "${SCRIPT_DIR}/pi/agent/mcp.json" "${HOME}/.pi/agent/mcp.json"
+    create_symlink "${SCRIPT_DIR}/pi/agent/themes/catppuccin-macchiato.json" "${HOME}/.pi/agent/themes/catppuccin-macchiato.json"
+    create_symlink "${SCRIPT_DIR}/pi/agent/themes/basalt-bloom-tasker.json" "${HOME}/.pi/agent/themes/basalt-bloom-tasker.json"
+    create_symlink "${SCRIPT_DIR}/plannotator/config.json" "${HOME}/.plannotator/config.json"
+
+    for extension in "${PI_EXTENSIONS[@]}"; do
+        create_symlink "${SCRIPT_DIR}/pi/agent/extensions/${extension}" "${HOME}/.pi/agent/extensions/${extension}"
+    done
+
+    for skill_path in "${SCRIPT_DIR}"/agents/skills/*; do
+        [[ -e "${skill_path}" ]] || continue
+        skill=$(basename "${skill_path}")
+        create_symlink "${skill_path}" "${HOME}/.agents/skills/${skill}"
+    done
+}
+
+link_profile_dotfiles() {
+    local profile=$1
+
+    case "${profile}" in
+        macos)
+            create_symlink "${SCRIPT_DIR}/ghostty/config" "${HOME}/.config/ghostty/config"
+            create_symlink "${SCRIPT_DIR}/herdr/herdr-mobile-relay-service" "${HOME}/.local/bin/herdr-mobile-relay-service"
+            create_symlink "${SCRIPT_DIR}/herdr/herdr-mobile-setup-qr" "${HOME}/.local/bin/herdr-mobile-setup-qr"
+            create_symlink "${SCRIPT_DIR}/herdr/dev.herdr.mobile-relay.plist" "${HOME}/Library/LaunchAgents/dev.herdr.mobile-relay.plist"
+            ;;
+        arch-desktop)
+            create_symlink "${SCRIPT_DIR}/ghostty/config" "${HOME}/.config/ghostty/config"
+            ;;
+        ubuntu-server)
+            # Server hosts do not need a terminal-emulator or launchd configuration.
+            ;;
+    esac
+}
+
+install_pi_runtime() {
+    npm ci --prefix "${SCRIPT_DIR}/pi"
+}
+
+initialize_git_submodules() {
+    git -C "${SCRIPT_DIR}" submodule update --init --recursive
+}
+
+install_tmux_plugins() {
+    if [[ ! -d "${HOME}/.tmux/plugins/tpm" ]]; then
+        printf 'Installing tmux package manager\n'
+        git clone https://github.com/tmux-plugins/tpm "${HOME}/.tmux/plugins/tpm"
+    fi
+}
+
+main() {
+    local profile
+    profile=$(detect_dotfiles_profile)
+    validate_dotfiles_profile "${profile}"
+    printf 'Installing dotfiles profile: %s\n' "${profile}"
+
+    install_platform_packages "${profile}"
+    create_config_directories
+    ensure_login_runtime_path
+    install_node_runtime
+    install_herdr
+    initialize_git_submodules
+    install_pi_runtime
+    backup_managed_files "${profile}"
+    link_shared_dotfiles
+    link_profile_dotfiles "${profile}"
+    install_tmux_plugins
+
+    printf '\nInstallation complete for %s.\n' "${profile}"
+    printf 'Herdr: %s\n' "$(herdr --version)"
+    printf 'Pi: %s\n' "$(pi --version)"
+    printf 'Run Herdr with: herdr\n'
+    printf 'Install tmux plugins with prefix + I when tmux is running.\n'
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
 fi
-
-mkdir -p ~/.local/bin/
-mkdir -p ~/.tmux
-mkdir -p ~/.config
-mkdir -p ~/.config/herdr
-
-# backup any files that will be replaced by a symlink
-backup_existing ~/.tmux.conf
-backup_existing ~/.zshrc
-backup_existing ~/.local/bin/tmux-sessionizer
-backup_existing ~/.local/bin/herdr-sessionizer
-backup_existing ~/.config/herdr/config.toml
-backup_existing ~/.config/starship.toml
-backup_existing ~/.config/nvim
-
-# create symlinks to the version controlled files
-create_symlink ${SCRIPT_DIR}/shell/zshrc ~/.zshrc
-create_symlink ${SCRIPT_DIR}/shell/starship.toml ~/.config/starship.toml
-create_symlink ${SCRIPT_DIR}/tmux/tmux-sessionizer ~/.local/bin/tmux-sessionizer
-create_symlink ${SCRIPT_DIR}/tmux/tmux.conf ~/.tmux.conf
-create_symlink ${SCRIPT_DIR}/herdr/herdr-sessionizer ~/.local/bin/herdr-sessionizer
-create_symlink ${SCRIPT_DIR}/herdr/config.toml ~/.config/herdr/config.toml
-create_symlink ${SCRIPT_DIR}/nvim ~/.config/nvim
-for f in $(ls ${SCRIPT_DIR}/shell/elk); do
-    create_symlink ${SCRIPT_DIR}/shell/elk/${f} ~/.local/bin/${f}
-done
-
-# setup tmux package manager
-if [ ! -d ~/.tmux/plugins/tpm ]; then
-    echo "Installing tmux package manager"
-    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-fi
-
-echo "Installation Done, run control + A + I in tmux to install plugins"

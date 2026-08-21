@@ -1,0 +1,29 @@
+{
+  "settings": {
+    "autoAuth": true,
+    "directTools": false,
+    "hostConfigDiscovery": "off",
+    "mcpFooterStatus": "compact",
+    "toolResultRendering": "compact"
+  },
+  "mcpServers": {
+    "linear": {
+      "url": "https://mcp.linear.app/mcp",
+      "auth": "oauth",
+      "lifecycle": "lazy"
+    },
+    "clickhouse": {
+      "url": "http://localhost:8000/mcp",
+      "headers": {
+        "Authorization": "!sh -c 'exec \"$HOME/.local/bin/clickhouse-mcp-authorization\"'"
+      },
+      "lifecycle": "lazy",
+      "requestTimeoutMs": 60000
+    },
+    "elasticsearch": {
+      "url": "http://localhost:7999/mcp",
+      "lifecycle": "lazy",
+      "requestTimeoutMs": 60000
+    }
+  }
+}

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+relay_config_dir="${HOME}/.config/herdr/plugins/config/herdr-mobile-relay.events"
+relay_env="${relay_config_dir}/relay.env"
+relay_binary="${HOME}/.local/share/herdr-mobile-relay/current/herdr-mobile-relay"
+
+if [[ ! -r "${relay_env}" ]]; then
+    echo "herdr-mobile-relay-service: missing private relay configuration at ${relay_env}" >&2
+    exit 78
+fi
+if [[ ! -x "${relay_binary}" ]]; then
+    echo "herdr-mobile-relay-service: missing installed relay binary at ${relay_binary}" >&2
+    exit 78
+fi
+
+set -a
+# shellcheck disable=SC1090 -- The Herdr plugin owns this generated, private environment file.
+source "${relay_env}"
+set +a
+
+export HERDR_RELAY_ENV="${relay_env}"
+export HERDR_RELAY_HOST="127.0.0.1"
+export HERDR_RELAY_PORT="${HERDR_RELAY_PORT:-8375}"
+export PATH="/opt/homebrew/bin:/usr/local/bin:${HOME}/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+exec "${relay_binary}" serve
