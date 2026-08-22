@@ -12,22 +12,6 @@
       "auth": "oauth",
       "lifecycle": "lazy"
     },
-    "azure": {
-      "command": "dnx",
-      "args": [
-        "Azure.Mcp@2.0.5",
-        "--source",
-        "https://api.nuget.org/v3/index.json",
-        "--yes",
-        "--",
-        "azmcp",
-        "server",
-        "start",
-        "--read-only"
-      ],
-      "lifecycle": "lazy",
-      "requestTimeoutMs": 120000
-    },
     "clickhouse": {
       "url": "http://localhost:8000/mcp",
       "headers": {

@@ -1,5 +1,8 @@
 require("tasker.set") -- install plugins
 
+-- lsp-zero v3 configures float borders with vim.lsp.with(), which was removed in Neovim 0.12.
+vim.g.lsp_zero_ui_float_border = 0
+
 -- setup lazy vim
 local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
 local uv = vim.uv or vim.loop
