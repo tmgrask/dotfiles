@@ -154,6 +154,8 @@ If a wait fails or returns `blocked`, inspect `agent get` and `agent read` befor
 
 ## Run a command or dev server in another pane
 
+Treat slow builds as visible work. When `HERDR_ENV=1`, run builds and other commands expected to take more than about ten seconds—full test suites, dependency installs, migrations, and stack startup—in a sibling pane so the user can watch progress while the agent continues working. Monitor completion with `pane wait-output` and `pane read`; keep the user's focus unchanged.
+
 Create a sibling pane with the same geometry rule, preserve the caller's working directory, and keep user focus unchanged:
 
 ```bash
