@@ -1,0 +1,31 @@
+{
+  "name": "pi-kagi-websearch-extension",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "check": "npm run typecheck && npm test",
+    "postinstall": "mkdir -p node_modules && (test -e node_modules/pi-web-tools || ln -s ../../../../node_modules/pi-web-tools node_modules/pi-web-tools)",
+    "test": "node --import tsx --test \"*.test.ts\"",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.composition.json"
+  },
+  "pi": {
+    "extensions": ["./index.ts"]
+  },
+  "dependencies": {
+    "pi-web-tools": "github:dmmulroy/pi-web-tools"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@types/html-to-text": "^9.0.4",
+    "@types/node": "^24.5.2",
+    "@types/turndown": "^5.0.5",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}

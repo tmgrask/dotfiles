@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+
+    // The upstream pi-web-tools sources are imported directly because the package
+    // ships TypeScript rather than declarations. Keep its legacy optional/indexed
+    // semantics confined to this composition check; Kagi-owned code uses the strict
+    // project in tsconfig.json.
+    "exactOptionalPropertyTypes": false,
+    "noUncheckedIndexedAccess": false
+  },
+  "include": ["./index.ts", "./vendor.d.ts"]
+}

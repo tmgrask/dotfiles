@@ -2,6 +2,8 @@ onboarding = false
 
 [keys]
 prefix = "ctrl+a"
+previous_agent = "ctrl+k"
+next_agent = "ctrl+j"
 # pane navigation is already vim-style by default: prefix+h/j/k/l
 
 # Project sessionizer, same muscle memory as the tmux setup
@@ -21,4 +23,6 @@ name = "catppuccin"
 panel_bg = "#06070a"
 
 [ui]
+sidebar_start_collapsed = true
+sidebar_collapsed_mode = "compact"
 agent_panel_sort = "spaces"

@@ -9,10 +9,13 @@ readonly PI_EXTENSIONS=(
     git-interceptor.ts
     herdr-agent-state.ts
     handoff
+    kagi-websearch
     pi-cloak
     pi-skill-toggle
     pi-worktrees
     save-md
+    session-reminder
+    slack-mcp-opt-in.ts
     user-message-divider
 )
 
@@ -223,7 +226,6 @@ backup_managed_files() {
     backup_existing "${HOME}/.zshrc"
     backup_existing "${HOME}/.local/bin/tmux-sessionizer"
     backup_existing "${HOME}/.local/bin/herdr-sessionizer"
-    backup_existing "${HOME}/.local/bin/clickhouse-mcp-authorization"
     backup_existing "${HOME}/.config/herdr/config.toml"
     backup_existing "${HOME}/.config/starship.toml"
     backup_existing "${HOME}/.config/nvim"
@@ -270,22 +272,15 @@ link_shared_dotfiles() {
     local extension
     local skill_path
     local skill
-    local elk_command
 
     create_symlink "${SCRIPT_DIR}/shell/zshrc" "${HOME}/.zshrc"
     create_symlink "${SCRIPT_DIR}/shell/starship.toml" "${HOME}/.config/starship.toml"
     create_symlink "${SCRIPT_DIR}/tmux/tmux-sessionizer" "${HOME}/.local/bin/tmux-sessionizer"
     create_symlink "${SCRIPT_DIR}/tmux/tmux.conf" "${HOME}/.tmux.conf"
     create_symlink "${SCRIPT_DIR}/herdr/herdr-sessionizer" "${HOME}/.local/bin/herdr-sessionizer"
-    create_symlink "${SCRIPT_DIR}/pi/clickhouse-mcp-authorization" "${HOME}/.local/bin/clickhouse-mcp-authorization"
     create_symlink "${SCRIPT_DIR}/pi/node_modules/.bin/pi" "${HOME}/.local/bin/pi"
     create_symlink "${SCRIPT_DIR}/herdr/config.toml" "${HOME}/.config/herdr/config.toml"
     create_symlink "${SCRIPT_DIR}/nvim" "${HOME}/.config/nvim"
-
-    for elk_command in "${SCRIPT_DIR}"/shell/elk/*; do
-        [[ -f "${elk_command}" ]] || continue
-        create_symlink "${elk_command}" "${HOME}/.local/bin/$(basename "${elk_command}")"
-    done
 
     create_symlink "${SCRIPT_DIR}/pi/agent/settings.json" "${HOME}/.pi/agent/settings.json"
     create_symlink "${SCRIPT_DIR}/pi/agent/cloak.json" "${HOME}/.pi/agent/cloak.json"

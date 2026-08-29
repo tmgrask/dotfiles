@@ -4,8 +4,9 @@ This setup is adapted from [dmmulroy/.dotfiles](https://github.com/dmmulroy/.dot
 
 ## Included
 
-- Packages: `pi-extmgr`, Plannotator, `dmmulroy/pi-web-tools`, and the lazy-proxy `pi-mcp-adapter`
-- Local extensions: lightweight post-compaction continuation, git safety, handoff, Herdr state reporting, secret cloaking, skill toggling, worktree management, divided user messages, and `/save-md`
+- Packages: `pi-extmgr`, Plannotator, and the lazy-proxy `pi-mcp-adapter`
+- Local extensions: Kagi-backed web search (with Exa fallback), lightweight post-compaction continuation, git safety, handoff, Herdr state reporting, secret cloaking, skill toggling, worktree management, divided user messages, `/save-md`, and evolving session reminders
+- Session reminders update Pi session names and Herdr tab labels after completed turns, and Pi's footer centers the three most recent topic changes from oldest to newest; press `Ctrl+Shift+R` or run `/remind-me` for a glanceable summary
 - Catppuccin Macchiato plus a Basalt Bloom variant with high-contrast divided user messages
 - Shared workflow skills under `agents/skills/`
 - Plannotator review/diff preferences under `plannotator/config.json`
@@ -16,25 +17,7 @@ Cloudflare/account-specific extensions, paste services, Workday automation, and 
 
 Run the repository's `./install`. It installs this workspace's npm dependencies and links tracked files into `~/.pi`, `~/.agents`, and `~/.plannotator` without replacing Pi's runtime credentials.
 
-MCP servers are configured in `agent/mcp.json`. Linear authenticates through OAuth on first use. The `clickhouse-mcp-authorization` helper reads the ClickHouse token from the first available source:
-
-1. `CLICKHOUSE_MCP_TOKEN`
-2. macOS Keychain service `clickhouse-mcp-token`
-3. `pass` entry `clickhouse-mcp-token`
-
-Never commit the token. On macOS, store a rotated token with:
-
-```bash
-security add-generic-password -U -a "$USER" -s clickhouse-mcp-token -w
-```
-
-On Linux, store it with:
-
-```bash
-pass insert clickhouse-mcp-token
-```
-
-These commands prompt for the value instead of exposing it in shell history.
+The public `agent/mcp.json` intentionally contains no account- or company-specific servers. Keep private MCP definitions, authentication helpers, and internal service instructions in a separate private agent repository. Never commit tokens or Pi runtime credentials.
 
 After changing extensions or settings, run `/reload` in Pi. Validate local extension code with:
 

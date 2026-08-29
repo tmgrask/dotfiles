@@ -60,6 +60,10 @@ if [[ "$(uname -s)" == Darwin && -d /opt/homebrew/opt/go@1.24/bin ]]; then
 fi
 
 [[ -s "$HOME/.bun/_bun" ]] && source "$HOME/.bun/_bun"
+# pi-web-tools websearch (Exa hosted MCP endpoint; keyless/rate-limited —
+# append ?exaApiKey=YOUR_KEY for higher limits)
+export PI_WEB_TOOLS_EXA_ENDPOINT="https://mcp.exa.ai/mcp"
+
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$HOME/.maestro/bin:$HOME/.grok/bin:$PATH"
 

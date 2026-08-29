@@ -6,8 +6,8 @@
     "agent/extensions/*"
   ],
   "scripts": {
-    "check": "npm run typecheck --workspace=pi-handoff-extension && npm run typecheck --workspace=pi-save-md-extension && npm run typecheck --workspace=pi-worktrees-extension && npm run typecheck --workspace=pi-skill-toggle",
-    "test": "npm test --workspace=pi-handoff-extension && npm test --workspace=pi-save-md-extension && npm test --workspace=pi-worktrees-extension && npm test --workspace=pi-skill-toggle"
+    "check": "npm run typecheck --workspace=pi-handoff-extension && npm run typecheck --workspace=pi-kagi-websearch-extension && npm run typecheck --workspace=pi-save-md-extension && npm run typecheck --workspace=pi-session-reminder-extension && npm run typecheck --workspace=pi-worktrees-extension && npm run typecheck --workspace=pi-skill-toggle",
+    "test": "npm test --workspace=pi-handoff-extension && npm test --workspace=pi-kagi-websearch-extension && npm test --workspace=pi-save-md-extension && npm test --workspace=pi-session-reminder-extension && npm test --workspace=pi-worktrees-extension && npm test --workspace=pi-skill-toggle"
   },
   "dependencies": {
     "@earendil-works/pi-ai": "^0.84.2",
