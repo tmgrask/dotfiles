@@ -1,4 +1,4 @@
-import { Plugin } from "@opencode-ai/plugin"
+import type { Plugin } from "@opencode-ai/plugin"
 import { execFile } from "node:child_process"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { homedir } from "node:os"
@@ -92,7 +92,7 @@ async function openNeovimReview(input: {
   return result
 }
 
-export default Plugin.define({
+const neovimPlanReviewPlugin = {
   id: "neovim-plan-review",
   async setup(ctx) {
     await ctx.session.hook("context", (event) => {
@@ -139,4 +139,6 @@ export default Plugin.define({
       })
     })
   },
-})
+} satisfies Plugin.Plugin
+
+export default neovimPlanReviewPlugin
