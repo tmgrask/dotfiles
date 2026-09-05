@@ -96,10 +96,7 @@ const neovimPlanReviewPlugin = {
   id: "neovim-plan-review",
   async setup(ctx) {
     await ctx.session.hook("context", (event) => {
-      if (event.agent !== "plan") {
-        delete event.tools.submit_plan
-        return
-      }
+      if (event.agent !== "plan") return
       if (event.tools.plan_exit) {
         event.tools.plan_exit.description = "Do not use this tool. Call submit_plan to open the Neovim review instead."
       }
