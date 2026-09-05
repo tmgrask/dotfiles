@@ -207,6 +207,7 @@ create_config_directories() {
         "${HOME}/.agents/skills" \
         "${HOME}/.config" \
         "${HOME}/.config/herdr" \
+        "${HOME}/.config/opencode/plugins" \
         "${HOME}/.local/bin" \
         "${HOME}/.pi/agent/extensions" \
         "${HOME}/.pi/agent/themes" \
@@ -226,7 +227,9 @@ backup_managed_files() {
     backup_existing "${HOME}/.zshrc"
     backup_existing "${HOME}/.local/bin/tmux-sessionizer"
     backup_existing "${HOME}/.local/bin/herdr-sessionizer"
+    backup_existing "${HOME}/.local/bin/opencode-plan-thread"
     backup_existing "${HOME}/.config/herdr/config.toml"
+    backup_existing "${HOME}/.config/opencode/plugins/neovim-plan-review"
     backup_existing "${HOME}/.config/starship.toml"
     backup_existing "${HOME}/.config/nvim"
     backup_existing "${HOME}/.pi/agent/settings.json"
@@ -278,8 +281,10 @@ link_shared_dotfiles() {
     create_symlink "${SCRIPT_DIR}/tmux/tmux-sessionizer" "${HOME}/.local/bin/tmux-sessionizer"
     create_symlink "${SCRIPT_DIR}/tmux/tmux.conf" "${HOME}/.tmux.conf"
     create_symlink "${SCRIPT_DIR}/herdr/herdr-sessionizer" "${HOME}/.local/bin/herdr-sessionizer"
+    create_symlink "${SCRIPT_DIR}/opencode/opencode-plan-thread" "${HOME}/.local/bin/opencode-plan-thread"
     create_symlink "${SCRIPT_DIR}/pi/node_modules/.bin/pi" "${HOME}/.local/bin/pi"
     create_symlink "${SCRIPT_DIR}/herdr/config.toml" "${HOME}/.config/herdr/config.toml"
+    create_symlink "${SCRIPT_DIR}/opencode/plugins/neovim-plan-review" "${HOME}/.config/opencode/plugins/neovim-plan-review"
     create_symlink "${SCRIPT_DIR}/nvim" "${HOME}/.config/nvim"
 
     create_symlink "${SCRIPT_DIR}/pi/agent/settings.json" "${HOME}/.pi/agent/settings.json"

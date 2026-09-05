@@ -1,0 +1,86 @@
+#!/usr/bin/env node
+
+import { spawnSync } from "node:child_process";
+
+function fail(message) {
+    process.stderr.write(`opencode-plan-thread: ${message}\n`);
+    process.exit(1);
+}
+
+function callOpenCodeApi(method, path, data) {
+    const args = ["api", method, path];
+    if (data !== undefined) args.push("--data", JSON.stringify(data));
+
+    const result = spawnSync("opencode2", args, {
+        cwd: process.cwd(),
+        encoding: "utf8",
+        maxBuffer: 16 * 1024 * 1024,
+    });
+    if (result.error) fail(result.error.message);
+    if (result.status !== 0) fail(result.stderr.trim() || `OpenCode API exited with ${result.status}`);
+
+    try {
+        return JSON.parse(result.stdout);
+    } catch {
+        fail("OpenCode API returned invalid JSON");
+    }
+}
+
+async function readStandardInput() {
+    const chunks = [];
+    for await (const chunk of process.stdin) chunks.push(chunk);
+    return Buffer.concat(chunks).toString("utf8");
+}
+
+function latestAssistantText(messages) {
+    const assistant = [...messages].reverse().find((message) => message.type === "assistant");
+    if (!assistant) fail("discussion session produced no assistant response");
+    return assistant.content
+        .filter((part) => part.type === "text" && typeof part.text === "string")
+        .map((part) => part.text)
+        .join("\n\n");
+}
+
+const rawRequest = await readStandardInput();
+let request;
+try {
+    request = JSON.parse(rawRequest);
+} catch {
+    fail("expected a JSON request on stdin");
+}
+
+let sessionID = request.sessionID;
+if (!sessionID) {
+    const created = callOpenCodeApi("post", "/api/session", {
+        title: `Plan discussion: ${request.section || "selection"}`,
+        agent: "explore",
+    });
+    sessionID = created?.data?.id;
+    if (typeof sessionID !== "string") fail("session creation returned no session ID");
+}
+
+const firstMessage = !request.sessionID;
+const prompt = firstMessage
+    ? `You are a read-only plan reviewer having a focused side conversation with the user.
+Answer the question directly. You may inspect the repository when useful, but do not modify it.
+This conversation is exploratory and will not be sent to the planning agent automatically.
+
+## Full plan
+
+${request.plan}
+
+## Selected section
+
+${request.selection}
+
+## User question
+
+${request.question}`
+    : request.question;
+
+callOpenCodeApi("post", `/api/session/${sessionID}/prompt`, { text: prompt });
+callOpenCodeApi("post", `/api/session/${sessionID}/wait`);
+const context = callOpenCodeApi("get", `/api/session/${sessionID}/context`);
+const response = latestAssistantText(context?.data ?? []);
+
+process.stdout.write(`${JSON.stringify({ sessionID, response })}\n`);
