@@ -6,7 +6,7 @@ previous_agent = "ctrl+k"
 next_agent = "ctrl+j"
 # pane navigation is already vim-style by default: prefix+h/j/k/l
 
-# Project sessionizer, same muscle memory as the tmux setup
+# Project sessionizer
 [[keys.command]]
 key = "ctrl+t"
 type = "popup"
@@ -25,4 +25,4 @@ panel_bg = "#06070a"
 [ui]
 sidebar_start_collapsed = true
 sidebar_collapsed_mode = "compact"
-agent_panel_sort = "spaces"
+agent_panel_sort = "priority"

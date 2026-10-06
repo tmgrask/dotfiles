@@ -4,7 +4,7 @@ This repository configures three supported machine roles from one installer:
 
 | Platform | Automatically selected profile | Intended role |
 |---|---|---|
-| macOS | `macos` | App-development agents and mobile Herdr relay |
+| macOS | `macos` | App-development agents |
 | Ubuntu/Debian | `ubuntu-server` | Persistent server-side agents |
 | Arch Linux/Omarchy | `arch-desktop` | Primary Ghostty and Herdr input machine |
 
@@ -37,7 +37,7 @@ DOTFILES_SKIP_PACKAGES=1 ./install
 Run Herdr on the machine where each workload lives. Tailscale connectivity and SSH authentication are prerequisites because they require an interactive account login and machine-specific host aliases. From the Arch/Omarchy input laptop, attach over a Tailscale-backed SSH alias:
 
 ```bash
-herdr --remote macstudio
+herdr --remote m5studio
 herdr --remote ubuntu
 ```
 
@@ -49,7 +49,6 @@ Keep credentials outside this repository:
 
 - Shell secrets: `~/.zshrc_private/`
 - Pi runtime credentials: `~/.pi/agent/auth.json`
-- Herdr mobile relay configuration: `~/.config/herdr/plugins/config/herdr-mobile-relay.events/`
 - ClickHouse MCP authorization: macOS Keychain, `pass`, or `CLICKHOUSE_MCP_TOKEN`
 
-Never commit generated relay setup URLs, OAuth credentials, Teleport profiles, or environment files.
+Never commit OAuth credentials, Teleport profiles, or environment files.

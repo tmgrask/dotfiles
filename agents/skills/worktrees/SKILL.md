@@ -1,64 +1,80 @@
 ---
 name: worktrees
-description: Manage Git worktrees in a canonical `.bare` repository root. Use when creating, reusing, listing, removing, or repairing worktrees, or when setting up a repository to keep all branch checkouts under one root.
+description: Manage Git worktrees beside a normal primary checkout under ~/checkout. Use when creating, reusing, listing, removing, or repairing worktrees, or when migrating a repository to this layout.
 ---
 
 # Git worktrees
 
-Use one root per repository:
+Keep the repository's normal primary checkout under `~/checkout` and create
+additional worktrees beside it:
 
 ```text
-<repo>/
-  .git       # gitdir: ./.bare
-  .bare/     # shared repository and object store
-  main/      # linked worktree
-  <topic>/   # linked worktree
+~/checkout/<org>/<repo>/            # normal primary checkout, normally main
+~/checkout/<org>/<repo>-<topic>/    # linked topic worktree
 ```
 
-Run repository-wide commands from `<repo>` and development commands from a linked worktree. Keep every checkout under `<repo>`.
+The primary checkout owns the shared `.git` directory. A machine may instead
+keep linked worktrees on an external drive by setting
+`WORKTREE_EXTERNAL_VOLUME` (see `scripts/new-worktree.sh --help`).
 
 ## Create or reuse a worktree
 
-1. From any linked worktree or the canonical root, run [`scripts/new-worktree.sh`](scripts/new-worktree.sh):
+1. From the primary checkout or any linked worktree, run
+   [`scripts/new-worktree.sh`](scripts/new-worktree.sh):
 
    ```bash
    scripts/new-worktree.sh <local-dir> <branch> [base]
    ```
 
-   Set `WORKTREE_ROOT` only when root discovery is unavailable. Set `WORKTREE_REMOTE` when the remote is not `origin`.
+2. Set `WORKTREE_REMOTE` when the desired branch is not on `origin`:
 
-2. Enter `<repo>/<local-dir>` and run:
+   ```bash
+   WORKTREE_REMOTE=upstream scripts/new-worktree.sh db-v2 db-v2
+   ```
+
+3. Change to the physical path printed by the script and verify it:
 
    ```bash
    git status --short --branch
    ```
 
-Creation is complete when `git worktree list` contains the path and its expected branch, and status is clean unless the branch already carried changes.
+The helper fetches and prunes, reuses an existing local branch, tracks a
+matching remote branch, or creates a new branch from `[base]`.
 
-The helper fetches and prunes, reuses an existing local branch, tracks a matching remote branch, or creates a new branch from `[base]`. Run it with `--help` for the exact decision order and defaults.
+## List worktrees
+
+Run this from any checkout:
+
+```bash
+git worktree list --verbose
+```
 
 ## Remove a worktree
 
 1. Account for every staged, unstaged, and untracked change:
 
    ```bash
-   git -C <repo>/<local-dir> status --short --branch
+   git -C <worktree-path> status --short --branch
    ```
 
 2. Remove the checkout through Git:
 
    ```bash
-   git -C <repo> worktree remove <local-dir>
+   git -C <primary-checkout> worktree remove <worktree-path>
    ```
 
-3. Delete the local branch only when its commits are integrated or intentionally discarded:
+3. Delete the local branch only when its commits are integrated or intentionally
+   discarded:
 
    ```bash
-   git -C <repo> branch -d <branch>
+   git -C <primary-checkout> branch -d <branch>
    ```
 
-Removal is complete when the path is absent from both the filesystem and `git -C <repo> worktree list`.
+Removal is complete when the path is absent from both the filesystem and
+`git worktree list`.
 
 ## Setup and recovery
 
-Read [`references/canonical-root.md`](references/canonical-root.md) when converting a repository to this layout, validating its invariants, cleaning stale registrations, or repairing moved worktrees.
+Read [`references/primary-checkout.md`](references/primary-checkout.md) when
+migrating a repository, validating layout invariants, cleaning stale
+registrations, or repairing moved worktrees.

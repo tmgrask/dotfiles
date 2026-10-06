@@ -5,15 +5,13 @@
   "defaultThinkingLevel": "high",
   "enableSkillCommands": true,
   "packages": [
-    "npm:pi-extmgr",
     "npm:@plannotator/pi-extension",
-    "npm:pi-mcp-adapter",
-    "npm:awesome-pi-themes"
+    "npm:pi-mcp-adapter"
   ],
   "editorPaddingX": 1,
   "terminal": {
     "showTerminalProgress": false
   },
   "showCacheMissNotices": false,
-  "lastChangelogVersion": "0.84.2"
+  "lastChangelogVersion": "0.85.0"
 }
