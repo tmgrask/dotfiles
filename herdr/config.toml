@@ -18,7 +18,7 @@ height = "50%"
 [theme]
 name = "catppuccin"
 
-# Match Pi's basalt-bloom background while retaining Herdr's Catppuccin accents.
+# Match the Ghostty basalt-bloom background while retaining Herdr's Catppuccin accents.
 [theme.custom]
 panel_bg = "#06070a"
 

@@ -4,21 +4,6 @@ set -euo pipefail
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 export PATH="${HOME}/.local/bin:${PATH}"
 
-readonly PI_EXTENSIONS=(
-    continue-after-compaction.ts
-    git-interceptor.ts
-    herdr-agent-state.ts
-    handoff
-    kagi-websearch
-    pi-cloak
-    pi-skill-toggle
-    pi-worktrees
-    save-md
-    session-reminder
-    slack-mcp-opt-in.ts
-    user-message-divider
-)
-
 create_symlink() {
     local source_path=$1
     local target_path=$2
@@ -141,15 +126,12 @@ install_platform_packages() {
 install_node_runtime() {
     local node_version
     local node_major
-    local node_minor
 
     if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
         node_version=$(node --version | sed 's/^v//')
         node_major=${node_version%%.*}
-        node_minor=${node_version#*.}
-        node_minor=${node_minor%%.*}
-        if (( node_major > 22 || (node_major == 22 && node_minor >= 19) )); then
-            printf 'Node.js already satisfies Pi: v%s\n' "${node_version}"
+        if (( node_major >= 22 )); then
+            printf 'Node.js already installed: v%s\n' "${node_version}"
             return
         fi
     fi
@@ -165,10 +147,8 @@ install_node_runtime() {
 
     node_version=$(node --version | sed 's/^v//')
     node_major=${node_version%%.*}
-    node_minor=${node_version#*.}
-    node_minor=${node_minor%%.*}
-    if (( node_major < 22 || (node_major == 22 && node_minor < 19) )); then
-        printf 'install: Pi requires Node.js >=22.19, but mise selected v%s\n' "${node_version}" >&2
+    if (( node_major < 22 )); then
+        printf 'install: expected Node.js 22 or later, but mise selected v%s\n' "${node_version}" >&2
         return 1
     fi
 }
@@ -201,20 +181,6 @@ install_herdr() {
     }
 }
 
-install_plannotator() {
-    if command -v plannotator >/dev/null 2>&1; then
-        printf 'Plannotator already installed: %s\n' "$(plannotator --version)"
-        return
-    fi
-
-    printf 'Installing Plannotator from plannotator.ai\n'
-    curl -fsSL https://plannotator.ai/install.sh | bash -s -- --non-interactive
-    command -v plannotator >/dev/null 2>&1 || {
-        printf 'install: Plannotator installation completed but plannotator is not on PATH\n' >&2
-        return 1
-    }
-}
-
 create_config_directories() {
     mkdir -p \
         "${HOME}/.agents/skill-backups" \
@@ -222,15 +188,37 @@ create_config_directories() {
         "${HOME}/.config" \
         "${HOME}/.config/herdr" \
         "${HOME}/.config/opencode/plugins" \
-        "${HOME}/.local/bin" \
-        "${HOME}/.pi/agent/extensions" \
-        "${HOME}/.pi/agent/themes" \
-        "${HOME}/.plannotator"
+        "${HOME}/.local/bin"
+}
+
+# Pi and Plannotator were retired; drop links earlier installs left pointing at them.
+remove_retired_links() {
+    local link
+    local links
+
+    shopt -s nullglob
+    links=(
+        "${HOME}/.local/bin/pi"
+        "${HOME}/.plannotator/config.json"
+        "${HOME}"/.pi/agent/*
+        "${HOME}"/.pi/agent/extensions/*
+        "${HOME}"/.pi/agent/themes/*
+    )
+    shopt -u nullglob
+
+    for link in "${links[@]}"; do
+        [[ -L "${link}" ]] || continue
+        case "$(readlink "${link}")" in
+            "${SCRIPT_DIR}"/pi/* | "${SCRIPT_DIR}"/plannotator/*)
+                printf 'Removing retired link %s\n' "${link}"
+                rm "${link}"
+                ;;
+        esac
+    done
 }
 
 backup_managed_files() {
     local profile=$1
-    local extension
     local skill_path
     local skill
     local installed_skill
@@ -241,21 +229,11 @@ backup_managed_files() {
     backup_existing "${HOME}/.config/herdr/config.toml"
     backup_existing "${HOME}/.config/starship.toml"
     backup_existing "${HOME}/.config/nvim"
-    backup_existing "${HOME}/.pi/agent/settings.json"
-    backup_existing "${HOME}/.pi/agent/cloak.json"
-    backup_existing "${HOME}/.pi/agent/themes/catppuccin-macchiato.json"
-    backup_existing "${HOME}/.pi/agent/themes/basalt-bloom-tasker.json"
-    backup_existing "${HOME}/.plannotator/config.json"
-    backup_existing "${HOME}/.local/bin/pi"
 
     if [[ "${profile}" != ubuntu-server ]]; then
         mkdir -p "${HOME}/.config/ghostty"
         backup_existing "${HOME}/.config/ghostty/config"
     fi
-
-    for extension in "${PI_EXTENSIONS[@]}"; do
-        backup_existing "${HOME}/.pi/agent/extensions/${extension}"
-    done
 
     for skill_path in "${SCRIPT_DIR}"/agents/skills/*; do
         [[ -e "${skill_path}" ]] || continue
@@ -273,26 +251,14 @@ backup_managed_files() {
 }
 
 link_shared_dotfiles() {
-    local extension
     local skill_path
     local skill
 
     create_symlink "${SCRIPT_DIR}/shell/zshrc" "${HOME}/.zshrc"
     create_symlink "${SCRIPT_DIR}/shell/starship.toml" "${HOME}/.config/starship.toml"
     create_symlink "${SCRIPT_DIR}/herdr/herdr-sessionizer" "${HOME}/.local/bin/herdr-sessionizer"
-    create_symlink "${SCRIPT_DIR}/pi/node_modules/.bin/pi" "${HOME}/.local/bin/pi"
     create_symlink "${SCRIPT_DIR}/herdr/config.toml" "${HOME}/.config/herdr/config.toml"
     create_symlink "${SCRIPT_DIR}/nvim" "${HOME}/.config/nvim"
-
-    create_symlink "${SCRIPT_DIR}/pi/agent/settings.json" "${HOME}/.pi/agent/settings.json"
-    create_symlink "${SCRIPT_DIR}/pi/agent/cloak.json" "${HOME}/.pi/agent/cloak.json"
-    create_symlink "${SCRIPT_DIR}/pi/agent/themes/catppuccin-macchiato.json" "${HOME}/.pi/agent/themes/catppuccin-macchiato.json"
-    create_symlink "${SCRIPT_DIR}/pi/agent/themes/basalt-bloom-tasker.json" "${HOME}/.pi/agent/themes/basalt-bloom-tasker.json"
-    create_symlink "${SCRIPT_DIR}/plannotator/config.json" "${HOME}/.plannotator/config.json"
-
-    for extension in "${PI_EXTENSIONS[@]}"; do
-        create_symlink "${SCRIPT_DIR}/pi/agent/extensions/${extension}" "${HOME}/.pi/agent/extensions/${extension}"
-    done
 
     for skill_path in "${SCRIPT_DIR}"/agents/skills/*; do
         [[ -e "${skill_path}" ]] || continue
@@ -314,10 +280,6 @@ link_profile_dotfiles() {
     esac
 }
 
-install_pi_runtime() {
-    npm ci --prefix "${SCRIPT_DIR}/pi"
-}
-
 main() {
     local profile
     profile=$(detect_dotfiles_profile)
@@ -329,15 +291,13 @@ main() {
     ensure_login_runtime_path
     install_node_runtime
     install_herdr
-    install_plannotator
-    install_pi_runtime
+    remove_retired_links
     backup_managed_files "${profile}"
     link_shared_dotfiles
     link_profile_dotfiles "${profile}"
 
     printf '\nInstallation complete for %s.\n' "${profile}"
     printf 'Herdr: %s\n' "$(herdr --version)"
-    printf 'Pi: %s\n' "$(pi --version)"
     printf 'Run Herdr with: herdr\n'
 }
 

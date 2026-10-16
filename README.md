@@ -16,7 +16,7 @@ cd ~/checkout/tmgrask/dotfiles
 ./install
 ```
 
-The installer detects the platform, installs native packages, provisions Node.js 22 through `mise`, installs Herdr, initializes Git submodules, installs the repository-pinned Pi runtime with `npm ci`, and links the shared configuration. Existing non-symlink configuration files are moved to timestamped `.bak` files.
+The installer detects the platform, installs native packages, provisions Node.js 22 through `mise`, installs Herdr, and links the shared configuration. Existing non-symlink configuration files are moved to timestamped `.bak` files.
 
 Override detection when testing a profile:
 
@@ -48,7 +48,6 @@ Use two Ghostty splits to display both remote Herdr sessions simultaneously. Rem
 Keep credentials outside this repository:
 
 - Shell secrets: `~/.zshrc_private/`
-- Pi runtime credentials: `~/.pi/agent/auth.json`
 - ClickHouse MCP authorization: macOS Keychain, `pass`, or `CLICKHOUSE_MCP_TOKEN`
 
 Never commit OAuth credentials, Teleport profiles, or environment files.

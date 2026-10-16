@@ -45,7 +45,7 @@ export NVM_DIR="$HOME/.nvm"
 [[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
 [[ -s "$NVM_DIR/bash_completion" ]] && source "$NVM_DIR/bash_completion"
 
-# Keep the repository-pinned Pi runtime ahead of system Node.js and optional nvm defaults.
+# Keep the mise-managed Node.js ahead of system Node.js and optional nvm defaults.
 if command -v mise >/dev/null 2>&1; then
     eval "$(mise activate zsh)"
 fi
