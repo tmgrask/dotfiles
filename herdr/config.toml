@@ -26,3 +26,5 @@ panel_bg = "#06070a"
 sidebar_start_collapsed = true
 sidebar_collapsed_mode = "compact"
 agent_panel_sort = "priority"
+# Resolved on the Herdr server, so `herdr --remote` shows the remote machine's name.
+tab_bar_right = [{ type = "zoom" }, { type = "hostname" }]
