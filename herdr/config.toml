@@ -26,5 +26,9 @@ panel_bg = "#06070a"
 sidebar_start_collapsed = true
 sidebar_collapsed_mode = "compact"
 agent_panel_sort = "priority"
-# Resolved on the Herdr server, so `herdr --remote` shows the remote machine's name.
-tab_bar_right = [{ type = "zoom" }, { type = "hostname" }]
+# "<host> - <focused space>", resolved on the Herdr server, so `herdr --remote`
+# shows the remote machine's name and its focused space.
+tab_bar_right = [
+  { type = "zoom" },
+  { type = "command", command = 'ws=$("${HERDR_BIN_PATH:-herdr}" workspace get "$HERDR_ACTIVE_WORKSPACE_ID" 2>/dev/null | jq -er .result.workspace.label) && printf "%s - %s\n" "$(hostname -s)" "$ws" || hostname -s', interval_seconds = 1, timeout_seconds = 1 },
+]
