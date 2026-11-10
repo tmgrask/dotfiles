@@ -43,6 +43,13 @@ herdr --remote ubuntu
 
 Use two Ghostty splits to display both remote Herdr sessions simultaneously. Remote hosts keep their panes and agents alive after the input laptop disconnects.
 
+## Agent harness
+
+OpenCode skills, agents, and configuration live in the Psiphon `ai-commons`
+repository (`personal/tasker/` on the `tasker/workstation` branch), not here.
+The installer no longer links anything into `~/.agents/skills`. The skills
+left in `agents/skills/` aren't installed.
+
 ## Private configuration
 
 Keep credentials outside this repository:

@@ -183,8 +183,6 @@ install_herdr() {
 
 create_config_directories() {
     mkdir -p \
-        "${HOME}/.agents/skill-backups" \
-        "${HOME}/.agents/skills" \
         "${HOME}/.config" \
         "${HOME}/.config/herdr" \
         "${HOME}/.config/opencode/plugins" \
@@ -219,10 +217,6 @@ remove_retired_links() {
 
 backup_managed_files() {
     local profile=$1
-    local skill_path
-    local skill
-    local installed_skill
-    local skill_backup
 
     backup_existing "${HOME}/.zshrc"
     backup_existing "${HOME}/.local/bin/herdr-sessionizer"
@@ -234,37 +228,14 @@ backup_managed_files() {
         mkdir -p "${HOME}/.config/ghostty"
         backup_existing "${HOME}/.config/ghostty/config"
     fi
-
-    for skill_path in "${SCRIPT_DIR}"/agents/skills/*; do
-        [[ -e "${skill_path}" ]] || continue
-        skill=$(basename "${skill_path}")
-        installed_skill="${HOME}/.agents/skills/${skill}"
-        skill_backup="${HOME}/.agents/skill-backups/${skill}"
-        if [[ -e "${installed_skill}" && ! -L "${installed_skill}" ]]; then
-            if [[ -e "${skill_backup}" ]]; then
-                skill_backup="${skill_backup}.$(date +%Y%m%d%H%M%S)"
-            fi
-            printf 'Backing up %s to %s\n' "${installed_skill}" "${skill_backup}"
-            mv "${installed_skill}" "${skill_backup}"
-        fi
-    done
 }
 
 link_shared_dotfiles() {
-    local skill_path
-    local skill
-
     create_symlink "${SCRIPT_DIR}/shell/zshrc" "${HOME}/.zshrc"
     create_symlink "${SCRIPT_DIR}/shell/starship.toml" "${HOME}/.config/starship.toml"
     create_symlink "${SCRIPT_DIR}/herdr/herdr-sessionizer" "${HOME}/.local/bin/herdr-sessionizer"
     create_symlink "${SCRIPT_DIR}/herdr/config.toml" "${HOME}/.config/herdr/config.toml"
     create_symlink "${SCRIPT_DIR}/nvim" "${HOME}/.config/nvim"
-
-    for skill_path in "${SCRIPT_DIR}"/agents/skills/*; do
-        [[ -e "${skill_path}" ]] || continue
-        skill=$(basename "${skill_path}")
-        create_symlink "${skill_path}" "${HOME}/.agents/skills/${skill}"
-    done
 }
 
 link_profile_dotfiles() {
